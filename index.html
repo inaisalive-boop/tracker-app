@@ -35,60 +35,76 @@
       padding: 8px;
       margin-top: 5px;
     }
+    .banner {
+      margin-top: 20px;
+      padding: 15px;
+      background: #222;
+      color: white;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
 
-  <h1>📅 오늘 기록</h1>
+<h1>📅 오늘 기록</h1>
 
-  <div class="card">
-    <label>검색(덕질) 했나?</label>
-    <input type="number" id="search" placeholder="0">
+<div class="card">
+  <label>검색 유무 (1/0)</label>
+  <input type="number" id="search">
 
-    <label>충동 몇 번?</label>
-    <input type="number" id="urge" placeholder="0">
+  <label>충동 횟수</label>
+  <input type="number" id="urge">
 
-    <label>무시 성공 몇 번?</label>
-    <input type="number" id="success" placeholder="0">
+  <label>5초컷 성공률 (%)</label>
+  <input type="number" id="fastSuccess">
 
-    <label>메모</label>
-    <input type="text" id="note" placeholder="한줄 기록">
+  <label>대체 행동 (1/0)</label>
+  <input type="number" id="altAction">
 
-    <button onclick="saveData()">저장</button>
-  </div>
+  <label>한 줄 전진</label>
+  <input type="text" id="progress">
 
-  <div class="card">
-    <h3>📊 기록 보기</h3>
-    <div id="history"></div>
-  </div>
+  <button onclick="saveData()">저장</button>
+</div>
+
+<div class="card">
+  <h3>📊 기록</h3>
+  <div id="history"></div>
+</div>
+
+<!-- ✅ 여기 추가된 배너 -->
+<div class="banner" id="banner"></div>
 
 <script>
+// 날짜
 function getToday() {
   return new Date().toISOString().split('T')[0];
 }
 
-// ✅ 날짜 체크 + 자동 생성
-function checkNewDay() {
-  const today = getToday();
-  const savedDate = localStorage.getItem("lastDate");
-
+// 오늘 데이터 생성
+function ensureTodayData() {
   let data = JSON.parse(localStorage.getItem("trackerData")) || [];
+  const today = getToday();
 
-  if (savedDate !== today) {
+  const exists = data.some(d => d.date === today);
+
+  if (!exists) {
     data.push({
       date: today,
-      search: 0,
-      urge: 0,
-      success: 0,
-      note: ""
+      search: "",
+      urge: "",
+      fastSuccess: "",
+      altAction: "",
+      progress: ""
     });
 
     localStorage.setItem("trackerData", JSON.stringify(data));
-    localStorage.setItem("lastDate", today);
   }
 }
 
-// ✅ 저장
+// 저장
 function saveData() {
   let data = JSON.parse(localStorage.getItem("trackerData")) || [];
   const today = getToday();
@@ -96,19 +112,19 @@ function saveData() {
   const index = data.findIndex(d => d.date === today);
 
   if (index !== -1) {
-    data[index].search = document.getElementById("search").value || 0;
-    data[index].urge = document.getElementById("urge").value || 0;
-    data[index].success = document.getElementById("success").value || 0;
-    data[index].note = document.getElementById("note").value || "";
+    data[index].search = document.getElementById("search").value;
+    data[index].urge = document.getElementById("urge").value;
+    data[index].fastSuccess = document.getElementById("fastSuccess").value;
+    data[index].altAction = document.getElementById("altAction").value;
+    data[index].progress = document.getElementById("progress").value;
   }
 
   localStorage.setItem("trackerData", JSON.stringify(data));
 
-  // ✅ 자동 새로고침
   location.reload();
 }
 
-// ✅ 화면 출력
+// 기록 렌더링
 function render() {
   let data = JSON.parse(localStorage.getItem("trackerData")) || [];
   const historyDiv = document.getElementById("history");
@@ -120,21 +136,40 @@ function render() {
     div.style.marginBottom = "10px";
     div.innerHTML = `
       <strong>${d.date}</strong><br>
-      검색: ${d.search} / 충동: ${d.urge} / 성공: ${d.success}<br>
-      메모: ${d.note}
+      검색: ${d.search} / 충동: ${d.urge} / 5초컷: ${d.fastSuccess}%<br>
+      대체행동: ${d.altAction}<br>
+      전진: ${d.progress}
     `;
     historyDiv.appendChild(div);
   });
 }
 
-// ✅ 실행
+// ✅ 대체행동 랜덤 배너
+function renderBanner() {
+  const messages = [
+    "5초 안에 다른 행동으로 전환",
+    "지금 물 한잔 마시기",
+    "자리에서 일어나기",
+    "핸드폰 내려놓고 1분 버티기",
+    "메모 앱 열고 아무거나 쓰기",
+    "창문 밖 보기",
+    "손으로 뭐라도 만지기",
+    "지금 하고 있던 일 1줄만 더 하기",
+    "유튜브 대신 음악만 틀기",
+    "딱 10초만 참아보기"
+  ];
+
+  const random = messages[Math.floor(Math.random() * messages.length)];
+  document.getElementById("banner").innerText = random;
+}
+
+// 실행
 window.onload = function() {
-  checkNewDay();
+  ensureTodayData();
   render();
+  renderBanner(); // 👉 추가
 };
 </script>
 
 </body>
 </html>
-
-<!-- update -->
