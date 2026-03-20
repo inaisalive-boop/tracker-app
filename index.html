@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>30일 트래커</title>
+<style>
+  body { font-family: sans-serif; padding: 20px; max-width: 500px; margin: auto; }
+  h2 { margin-bottom: 10px; }
+  .card { padding: 15px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 15px; }
+  select, input { width: 100%; padding: 8px; margin-top: 5px; margin-bottom: 10px; }
+  button { width: 100%; padding: 10px; font-size: 16px; }
+</style>
+</head>
+<body>
+
+<h2>📅 Daily Tracker</h2>
+
+<div class="card">
+  <div>오늘: <span id="today"></span></div>
+</div>
+
+<div class="card">
+  <label>검색 0회</label>
+  <select id="search">
+    <option>O</option>
+    <option>X</option>
+  </select>
+
+  <label>충동 횟수</label>
+  <input id="impulse" type="number" min="0">
+
+  <label>5초 컷 성공률</label>
+  <select id="cut">
+    <option>높음</option>
+    <option>보통</option>
+    <option>낮음</option>
+  </select>
+
+  <label>대체 행동</label>
+  <select id="action">
+    <option>O</option>
+    <option>X</option>
+  </select>
+
+  <label>한 줄 전진</label>
+  <input id="note" type="text">
+
+  <button onclick="save()">저장</button>
+</div>
+
+<div class="card">
+  <h3>📊 요약</h3>
+  <div>연속 성공일: <b id="streak">0</b></div>
+  <div>총 성공일: <b id="success">0</b></div>
+  <div>총 실패일: <b id="fail">0</b></div>
+  <div>총 충동 횟수: <b id="totalImpulse">0</b></div>
+</div>
+
+<script>
+const today = new Date().toISOString().slice(0,10);
+document.getElementById("today").innerText = today;
+
+function save() {
+  const data = {
+    date: today,
+    search: document.getElementById("search").value,
+    impulse: Number(document.getElementById("impulse").value || 0),
+    cut: document.getElementById("cut").value,
+    action: document.getElementById("action").value,
+    note: document.getElementById("note").value
+  };
+
+  localStorage.setItem(today, JSON.stringify(data));
+  alert("저장됨");
+  loadStats();
+}
+
+function loadToday() {
+  const saved = JSON.parse(localStorage.getItem(today));
+  if (!saved) return;
+
+  document.getElementById("search").value = saved.search;
+  document.getElementById("impulse").value = saved.impulse;
+  document.getElementById("cut").value = saved.cut;
+  document.getElementById("action").value = saved.action;
+  document.getElementById("note").value = saved.note;
+}
+
+function loadStats() {
+  let success = 0, fail = 0, totalImpulse = 0;
+  let streak = 0;
+
+  const keys = Object.keys(localStorage).sort();
+
+  for (let i = 0; i < keys.length; i++) {
+    const d = JSON.parse(localStorage.getItem(keys[i]));
+    if (!d) continue;
+
+    if (d.search === "O") success++;
+    else fail++;
+
+    totalImpulse += d.impulse;
+  }
+
+  for (let i = keys.length - 1; i >= 0; i--) {
+    const d = JSON.parse(localStorage.getItem(keys[i]));
+    if (d && d.search === "O") streak++;
+    else break;
+  }
+
+  document.getElementById("success").innerText = success;
+  document.getElementById("fail").innerText = fail;
+  document.getElementById("totalImpulse").innerText = totalImpulse;
+  document.getElementById("streak").innerText = streak;
+}
+
+loadToday();
+loadStats();
+</script>
+
+</body>
+</html>
